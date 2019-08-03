@@ -76,7 +76,22 @@ def iou(preds, labels, C, EMPTY=1., ignore=None, per_image=False):
 # --------------------------- BINARY LOSSES ---------------------------
 
 
-def lovasz_hinge(logits, labels, per_image=True, ignore=None):
+# def lovasz_hinge(logits, labels, per_image=False, ignore=None):
+#     """
+#     Binary Lovasz hinge loss
+#       logits: [B, H, W] Variable, logits at each pixel (between -\infty and +\infty)
+#       labels: [B, H, W] Tensor, binary ground truth masks (0 or 1)
+#       per_image: compute the loss per image instead of per batch
+#       ignore: void class id
+#     """
+#     if per_image:
+#         loss = mean(lovasz_hinge_flat(*flatten_binary_scores(log.unsqueeze(0), lab.unsqueeze(0), ignore))
+#                           for log, lab in zip(logits, labels))
+#     else:
+#         loss = lovasz_hinge_flat(*flatten_binary_scores(logits, labels, ignore))
+#     return loss
+
+def lovasz_hinge(logits, labels, per_image=False, ignore=None):
     """
     Binary Lovasz hinge loss
       logits: [B, H, W] Variable, logits at each pixel (between -\infty and +\infty)
@@ -84,6 +99,9 @@ def lovasz_hinge(logits, labels, per_image=True, ignore=None):
       per_image: compute the loss per image instead of per batch
       ignore: void class id
     """
+    print(logits.min(), logits.max(), logits.size())
+    logits=logits[:,1,:,:]
+    labels = labels.squeeze(1)
     if per_image:
         loss = mean(lovasz_hinge_flat(*flatten_binary_scores(log.unsqueeze(0), lab.unsqueeze(0), ignore))
                           for log, lab in zip(logits, labels))
@@ -128,6 +146,15 @@ def flatten_binary_scores(scores, labels, ignore=None):
     vlabels = labels[valid]
     return vscores, vlabels
 
+
+def combined_loss2(logits, labels):
+    logits = logits[:, 1, :, :].float()
+    labels = labels.squeeze(1).float()
+
+    lh_loss = lovasz_hinge_flat(*flatten_binary_scores2(logits, labels))
+    bce_loss = F.binary_cross_entropy_with_logits(logits, labels)
+
+    return 0.8 * bce_loss + lh_loss
 
 class StableBCELoss(torch.nn.modules.Module):
     def __init__(self):
