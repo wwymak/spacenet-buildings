@@ -5,6 +5,7 @@ from pathlib import Path
 from tqdm import tqdm
 from joblib import Parallel, delayed
 import pandas as pd
+import geopandas as gpd
 import PIL
 
 
@@ -26,10 +27,11 @@ def ls(x, recursive=False, include=[], exclude=[]):
 Path.ls = ls
 
 
-def create_label_file(img_path):
+def create_label_file(img_path, label_dir):
     img_array = np.array(PIL.Image.open(img_path))
+    img_id = img_path.name.replace('.png', '')
     gdf = mask_to_poly_geojson(img_array, simplify=True)
-    idx = [uuid4() for _ in range(len(gdf))]
+    idx = [str(uuid4()) for _ in range(len(gdf))]
 
     gdf["polygon_id"] = idx
     gdf["img_id"] = img_path.name
