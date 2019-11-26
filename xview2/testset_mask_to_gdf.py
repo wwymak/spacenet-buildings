@@ -27,7 +27,7 @@ def ls(x, recursive=False, include=[], exclude=[]):
 Path.ls = ls
 
 
-def create_label_file(img_path, label_dir):
+def create_label_file(img_path):
     img_array = np.array(PIL.Image.open(img_path))
     img_id = img_path.name.replace('.png', '')
     gdf = mask_to_poly_geojson(img_array, simplify=True)
