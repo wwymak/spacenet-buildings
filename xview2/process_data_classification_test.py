@@ -83,7 +83,7 @@ def process_img(img_array, polygon_pts, scale_pct):
 
 def process_one_image(segmentation_results_df, data_dir, image_crops_dir,img_id):
     img_polygons_df = segmentation_results_df[segmentation_results_df['img_id'] == img_id]
-    post_image_fpath = data_dir / "test" / "images" / (img_id.replace('pre', 'post'))
+    post_image_fpath = data_dir / "test" / "images" / f"test_post_{img_id.replace('test_localization_', '').replace('_prediction.png', '')}.png"
     if len(img_polygons_df) == 0:
         return
     img_array = np.array(PIL.Image.open(post_image_fpath))
