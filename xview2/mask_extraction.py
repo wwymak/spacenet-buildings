@@ -1,25 +1,13 @@
 import warnings
 warnings.filterwarnings("ignore")
 
-import glob
-
-from osgeo import gdal
 from shapely import wkt
 
 import os
-os.environ["PROJ_LIB"]="/home/wwymak/anaconda3/envs/solaris/share/proj"
+os.environ["PROJ_LIB"]="/home/wwymak/anaconda3/envs/fastai-solaris/share/proj"
 
+# import solaris as sol
 
-import rasterio
-from torch.utils.tensorboard import SummaryWriter
-import skimage
-import geopandas as gpd
-from matplotlib import pyplot as plt
-from shapely.ops import cascaded_union
-import solaris as sol
-
-from tqdm import tqdm
-import tifffile as sktif
 
 import geopandas as gpd
 import numpy as np
@@ -55,7 +43,6 @@ def parse_json(label_json):
     df_xy.geometry_pixel = df_xy.geometry_pixel.apply(wkt.loads)
     df_lnglat.set_index('id', inplace=True)
     label_df = df_xy.merge(df_lnglat['geometry_lnglat'], left_index=True, right_index=True)
-
     label_gdf = gpd.GeoDataFrame(label_df, geometry='geometry_pixel')
     label_gdf['centroid'] = label_gdf.geometry_pixel.centroid
     return label_gdf
