@@ -59,6 +59,39 @@ def create_mask(json_file, data_dir, mask_dir, tile_size=1024):
                                          boundary_width=3, boundary_type='inner')
     PIL.Image.fromarray(fb_mask).save(mask_dir/(json_file.replace('.json', '.png')))
 
+def create_small_tiles_masks(mask_filepath, save_dir):
+    img_id = mask_filepath.name.replace('.png', '')
+    if not mask_filepath.exists():
+        return
+    mask_im = PIL.Image.open(mask_filepath)
+
+    # no point in making smaller tiles with a masks that has no building int it
+    if mask_im.getextrema()[1] == 0:
+        return
+
+    #     box = left, upper, right, and lower pixe
+
+    boxes = [
+        (0, 0, 512, 512),
+        (0, 256, 512, 768),
+        (0, 512, 512, 1024),
+        (256, 0, 768, 512),
+        (256, 256, 768, 768),
+        (256, 512, 768, 1024),
+        (512, 0, 1024, 512),
+        (512, 256, 1024, 768),
+        (512, 512, 1024, 1024)
+    ]
+
+    mask_crops = [mask_im.crop(box) for box in boxes]
+
+    for i, mask_crop in enumerate(mask_crops):
+        mask_max = np.array([x for x in mask_crop.getextrema()]).max()
+
+        # only save crops that have buildings to help with training
+        if mask_max > 0:
+            mask_crop.save(save_dir / f"mask_{img_id}_{i}.png")
+
 def create_small_tiles(img_filepath, mask_filepath, im_id, save_dir_rgb, save_dir_mask):
     if not mask_filepath.exists():
         return
