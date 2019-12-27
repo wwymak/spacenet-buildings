@@ -1,25 +1,13 @@
 import warnings
 warnings.filterwarnings("ignore")
-
-import glob
-
-from osgeo import gdal
 from shapely import wkt
 
 import os
 os.environ["PROJ_LIB"]="/home/wwymak/anaconda3/envs/solaris/share/proj"
 
-
-import rasterio
-from torch.utils.tensorboard import SummaryWriter
-import skimage
-import geopandas as gpd
-from matplotlib import pyplot as plt
-from shapely.ops import cascaded_union
 import solaris as sol
 import PIL
 from tqdm import tqdm
-import tifffile as sktif
 
 import geopandas as gpd
 import numpy as np
@@ -65,12 +53,13 @@ def create_mask(json_file, data_dir, mask_dir, tile_size=1024):
         label = json.load(f)
     label_gdf = parse_json(label)
     if label_gdf is None or len(label_gdf) == 0:
-        return
-    fb_mask = sol.vector.mask.df_to_px_mask(df=label_gdf, geom_col="geometry_pixel",
-                                         channels=['footprint'],
+        return 0
+    fb_mask = sol.vector.mask.footprint_mask(df=label_gdf, geom_col="geometry_pixel",
+                                         burn_value=None, burn_field="damage_cls",
                                          shape=(tile_size,tile_size)).squeeze()
-    # print(fb_mask.shape)
+    # print(fb_mask.max)
     PIL.Image.fromarray(fb_mask, mode='L').save(mask_dir/(json_file.replace('.json', '.png')))
+    return fb_mask.max()
 
 def create_small_tiles(img_filepath, mask_filepath, im_id, save_dir_rgb, save_dir_mask):
     if not mask_filepath.exists():
@@ -117,16 +106,18 @@ if __name__ == "__main__":
     train_mask_crops = data_dir / "mask_crops_single_channel"
     train_images_crops.mkdir(exist_ok=True)
     train_mask_crops.mkdir(exist_ok=True)
-    undamaged_fnames = [fname.name for fname in (data_dir / "train" / "labels").ls() if 'pre_disaster' in fname.name]
-
-    _ = Parallel(n_jobs=16)(delayed(create_mask)(f, data_dir, mask_dir) for f in undamaged_fnames)
-
+    all_fnames = [fname.name for fname in (data_dir / "train" / "labels").ls() ]
+    print("start create big tiles")
+    mask_max = Parallel(n_jobs=14)(delayed(create_mask)(f, data_dir, mask_dir) for f in tqdm(all_fnames))
+    print(np.array(mask_max).max(),np.unique(np.array(mask_max)))
     create_tile = partial(create_small_tiles, save_dir_rgb=train_images_crops, save_dir_mask=train_mask_crops)
 
     img_filepaths = (data_dir / "train" / "images").ls()
     mask_filepaths = [mask_dir / f.name for f in img_filepaths]
     img_ids = [f.name.replace('png', '') for f in img_filepaths]
+
+    print("start create small tiles")
     # [create_tile(img_filepath, mask_filepath, im_id) for (img_filepath, mask_filepath, im_id) in zip(img_filepaths, mask_filepaths, img_ids )]
     _ = Parallel(n_jobs=14)(delayed(create_tile)(img_filepath, mask_filepath, im_id) \
-                            for (img_filepath, mask_filepath, im_id) in zip(img_filepaths, mask_filepaths, img_ids))
+                            for (img_filepath, mask_filepath, im_id) in tqdm(zip(img_filepaths, mask_filepaths, img_ids)))
     # fro
