@@ -105,7 +105,7 @@ def process_data(data_dir, image_crops_dir):
             y_data: A list of labels for damage represented in matrix form
     """
 
-    buildings_segmentation_data = pd.read_csv(data_dir/"test_polygons.csv")
+    buildings_segmentation_data = pd.read_csv(data_dir/"test_polygons_edt.csv")
     buildings_segmentation_data['geometry'] = buildings_segmentation_data['geometry'].apply(lambda x: wkt.loads(x))
     img_ids = buildings_segmentation_data['img_id'].unique()
 

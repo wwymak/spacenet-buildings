@@ -1,6 +1,5 @@
 from pathlib import Path
 from tqdm import tqdm
-import tifffile as sktif
 
 import geopandas as gpd
 import numpy as np
