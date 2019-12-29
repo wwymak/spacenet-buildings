@@ -45,7 +45,7 @@ def combine_images(img_id, test_mask_crops_dir, test_masks_dir):
         full_img[start_index_row:end_index_row, start_index_col: endindex_col] = arr
 
     img = PIL.Image.fromarray(full_img.astype(np.uint8))
-    fname = f"test_localization_{img_id.replace('mask_test_pre_', '')}_prediction.png"
+    fname = f"test_damage_{img_id.replace('mask_test_post_', '')}_prediction.png"
     img.save(test_masks_dir / fname, mode="L")
 
 
@@ -58,11 +58,13 @@ if __name__=="__main__":
     test_images_crops = data_dir / "test_crops"
     test_mask_crops = data_dir / "test_mask_crops_single_channel"
     test_mask_edt_crops = data_dir / "test_mask_crops_edt"
+    test_mask_damaged_segment_crops = data_dir / "test_mask_crops_damaged_segment"
     test_masks = data_dir / "test_masks"
     test_masks_edt = data_dir / "test_masks_edt"
-    test_masks_edt.mkdir(exist_ok=True)
+    test_mask_damaged_segment = data_dir / "test_mask_damaged_segment"
+    test_mask_damaged_segment.mkdir(exist_ok=True)
 
-    img_ids = list(set(['_'.join(x.name.split('_')[:-1]) for x in test_mask_edt_crops.ls()]))
-    img_ids = [x for x in img_ids if 'pre_' in x]
+    img_ids = list(set(['_'.join(x.name.split('_')[:-1]) for x in test_mask_damaged_segment_crops.ls()]))
+    img_ids = [x for x in img_ids if 'post_' in x]
 
-    _ = Parallel(n_jobs=14)(delayed(combine_images)(img_id, test_mask_edt_crops, test_masks_edt) for img_id in img_ids)
+    _ = Parallel(n_jobs=14)(delayed(combine_images)(img_id, test_mask_damaged_segment_crops, test_mask_damaged_segment) for img_id in img_ids)

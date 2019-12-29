@@ -49,9 +49,10 @@ if __name__ == "__main__":
     test_mask_edt_crops = data_dir / "test_mask_crops_edt"
     test_masks = data_dir / "test_masks"
     test_masks_edt = data_dir / "test_masks_edt"
+    test_mask_damaged_segment = data_dir / "test_mask_damaged_segment"
 
-    gdf_array = Parallel(n_jobs=14)(delayed(create_label_file)(img_id) for img_id in tqdm(test_masks_edt.ls()))
+    gdf_array = Parallel(n_jobs=14)(delayed(create_label_file)(img_id) for img_id in tqdm(test_mask_damaged_segment.ls()))
     gdf_array = pd.concat(gdf_array)
-    gdf_array.to_csv(data_dir/"test_polygons_edt.csv", index=False)
+    gdf_array.to_csv(data_dir/"test_polygons_damaged_segment.csv", index=False)
 
 
